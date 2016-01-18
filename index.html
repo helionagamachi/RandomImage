@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>Random images</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js">
+    </script>
+    <script src="app.js"></script>
+  </head>
+  <body ng-app="randomImage">
+    <div ng-controller="InputController">
+      <label>Lines:</label> <input type="number" ng-model="state.lines">
+      <label>Columns:</label> <input type="number" ng-model="state.columns">
+      <br>
+      <label>Variance:</label><input type="range" min="0" max="20" step="1" ng-model="state.variance">
+      {{state.variance}}
+      <br/>
+      <label>Random Chance:</label>
+      <input ng-model="state.randomChance">
+      <br/>
+      
+    </div>
+    <div ng-controller="CanvasController">
+      <canvas id="canvas" height="{{state.lines}}" width="{{state.columns}}"
+      style="background-color:black" ng-click="lol()">
+      </canvas>
+    </div>
+  </body>
+</html>
