@@ -1,8 +1,8 @@
 angular.module('services', []).factory('state', function(){
   var state = {
-    lines: 2048,
-    columns: 1536,
-    variance: 2,
+    lines: 300,
+    columns: 300,
+    variance: 3,
     randomChance: 0.0001,
   }
   return state;
@@ -34,44 +34,69 @@ angular.module('services', []).factory('state', function(){
     return ((line * columns) + column) * 4 + channel;
   }
   function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 0.8)) + min;
-}
+    return Math.floor(Math.random() * (max - min + 0.8)) + min;
+  }
   // random functions
-  function lineRandom(state, imageData, context){
-    for (var line = 0; line < imageData.height; line++) {
-      for (var column = 0; column < imageData.width; column++) {
-        var useRandom = Math.random() <= state.randomChance;
-        for (var channel = 0; channel < 4; channel++) {
-          var index = getIndex(line, column, imageData.width, channel);
-          if (channel == 3) {
-            imageData.data[index] = 255;
-          } else {
-            if (useRandom || (line == 0 && column == 0)) {
-              imageData.data[index] = Math.floor(Math.random() * 256);
-            } else {
-              var neighbours = [];
-              if (column != 0) {
-                neighbours.unshift(LEFT);
-              }
-              if (line != 0 ) {
-                neighbours.unshift(UP);
-                if (column != 0) {
-                  neighbours.unshift(UP | LEFT);
-                }
-                if (column != imageData.width - 1) {
-                  neighbours.unshift(UP | RIGHT);
-                }
-              }
-              var mean = getMeanFromNeighbours(line, column, channel, imageData, neighbours);
-              var min = Math.max(mean - parseInt(state.variance), 0);
-              var max = Math.min(mean + parseInt(state.variance), 255);
-              imageData.data[index] = getRandomInt(min, max);
-            }
-          }
-        }
+  function lineRandom(state, context){
+    // var imageData = context.createImageData(state.columns, 1);
+    var line = 0;
+
+    var worker = new Worker("js/line-worker.js");
+    var message = {
+      pixels: state.columns,
+      randomChance: state.randomChance,
+      variance: parseInt(state.variance),
+      previous: false
+    };
+    worker.postMessage(message);
+    worker.onmessage = function(msg){
+      var imageData = new ImageData(msg.data.result, state.columns, 1);
+      // for(var i = 0; i < msg.data.result.length; i++) {
+      //   imageData.data[i] = msg.data.result[i];
+      // }
+      context.putImageData(imageData,0, line);
+      line = line + 1;
+      if (line == state.lines) {
+        worker.terminate();
+        message.previous = msg.data.result;
+        // worker.postMessage(message);
       }
+      
     }
-    return imageData;
+    // for (var line = 0; line < imageData.height; line++) {
+    //   for (var column = 0; column < imageData.width; column++) {
+    //     var useRandom = Math.random() <= state.randomChance;
+    //     for (var channel = 0; channel < 4; channel++) {
+    //       var index = getIndex(line, column, imageData.width, channel);
+    //       if (channel == 3) {
+    //         imageData.data[index] = 255;
+    //       } else {
+    //         if (useRandom || (line == 0 && column == 0)) {
+    //           imageData.data[index] = Math.floor(Math.random() * 256);
+    //         } else {
+    //           var neighbours = [];
+    //           if (column != 0) {
+    //             neighbours.unshift(LEFT);
+    //           }
+    //           if (line != 0 ) {
+    //             neighbours.unshift(UP);
+    //             if (column != 0) {
+    //               neighbours.unshift(UP | LEFT);
+    //             }
+    //             if (column != imageData.width - 1) {
+    //               neighbours.unshift(UP | RIGHT);
+    //             }
+    //           }
+    //           var mean = getMeanFromNeighbours(line, column, channel, imageData, neighbours);
+    //           var min = Math.max(mean - parseInt(state.variance), 0);
+    //           var max = Math.min(mean + parseInt(state.variance), 255);
+    //           imageData.data[index] = getRandomInt(min, max);
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+    // return imageData;
   }
   return {
     line:lineRandom
@@ -90,17 +115,9 @@ angular.module("randomImage", ['services'])
   // var imageData = context.createImageData(state.lines, state.columns);
   // $scope.$watch('state', function(){
   $scope.lol = function(){
-    setTimeout(function(){
-      var imageData = context.createImageData($scope.state.columns, $scope.state.lines);
-      var i = functions.line($scope.state, imageData);
-      context.putImageData(i, 0, 0);
-    }, 1)
-    
-  }  
-    
-    
-    
-  // })
+    functions.line($scope.state, context);
+    // context.putImageData(i, 0, 0);
+  }
   
 }])
 ;
