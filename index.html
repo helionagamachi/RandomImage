@@ -7,15 +7,22 @@
   </head>
   <body ng-app="randomImage">
     <div ng-controller="InputController">
-      <label>Lines:</label> <input type="number" ng-model="state.lines">
-      <label>Columns:</label> <input type="number" ng-model="state.columns">
+      <label>Lines:</label>
+      <input pattern="\d*" type="number" ng-model="state.lines" 
+        ng-change="validateInt('lines')">
+      <label>Columns:</label> <input pattern="\d*" type="number" ng-model="state.columns"
+        ng-change="validateInt('columns')">
       <br>
-      <label>Variance:</label><input type="range" min="0" max="20" step="1" ng-model="state.variance">
+      <label>Variance:</label><input type="range" min="0" max="20" step="1" 
+         ng-model="state.variance" ng-change="validateInt('variance')">
       {{state.variance}}
       <br/>
       <label>Random Chance:</label>
-      <input ng-model="state.randomChance">
+      <input pattern="[\d\.\+\*]*"  inputmode="numeric" type="number" ng-model="state.randomChance"
+        ng-change="validateFloat('randomChance')">
       <br/>
+      <button ng-click="start()">go</button>
+
       
     </div>
     <div ng-controller="CanvasController">

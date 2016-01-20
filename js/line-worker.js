@@ -45,7 +45,7 @@ function LineGenerator(length, randomChance, variance){
             }, 0) / previousValues.length;
             var min = Math.max(mean - variance, 0);
             var max = Math.min(mean + variance, 255);
-            channelValue = getRandomInt(min, max);
+            channelValue = getRandomInt(min, max, 1);
           }
         }
         result[index] = channelValue;
@@ -63,10 +63,12 @@ onmessage = function(msg){
     var response = {
       x: 0,
       y: line,
-      imageData: imageData
+      imageData: imageData,
+      type: 'data'
     };
     postMessage(response);
   }
-  // should tell that the work is done
+  postMessage({type:'end'});
   close();
+
 }
