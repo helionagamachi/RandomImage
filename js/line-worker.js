@@ -1,56 +1,72 @@
 var previous = false;
 
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 0.843)) + min;
+function getRandomInt(min, max, includeMax) {
+  includeMax = includeMax || 0;
+  return Math.floor(Math.random() * (max - min + includeMax)) + min;
+}
+
+function LineGenerator(length, randomChance, variance){
+  var previous = false;
+  this.nextLine = function(){
+    var result = new Uint8ClampedArray(length * 4);
+    for (var pixelIndex = 0; pixelIndex < length; pixelIndex++) {
+      var useRandom = false;
+      if (pixelIndex == 0 && previous == false) {
+        useRandom = true;
+      } else {
+        useRandom = Math.random() <= randomChance;
+      }
+      for (var channel = 0; channel < 4; channel++) {
+        var channelValue;
+        var index = pixelIndex * 4 + channel;
+        if (channel == 3) {
+          channelValue = 255;
+        } else {
+          if (useRandom) {
+            channelValue = Math.floor(Math.random() * 256);
+          } else {
+            var previousValues = [];
+            
+            if (pixelIndex > 0) {
+              previousValues.push(result[index - 4]);
+            }
+            
+            if (previous != false){
+              if(pixelIndex > 0){
+                previousValues.push(previous[index - 4]);
+              }
+              previousValues.push(previous[index]);
+              if (pixelIndex < length - 1) {
+                previousValues.push(previous[index + 4]);
+              }
+            }
+            var mean = previousValues.reduce(function(prev, cur){
+              return prev + cur;
+            }, 0) / previousValues.length;
+            var min = Math.max(mean - variance, 0);
+            var max = Math.min(mean + variance, 255);
+            channelValue = getRandomInt(min, max);
+          }
+        }
+        result[index] = channelValue;
+      }
+    }
+    previous = result;
+    return result;
+  }
 }
 
 onmessage = function(msg){
-  var result = new Uint8ClampedArray(msg.data.pixels * 4);
-  for (var pixelIndex = 0; pixelIndex < msg.data.pixels; pixelIndex++) {
-    var useRandom = false;
-    if (pixelIndex == 0 && previous == false) {
-      useRandom = true;
-    } else {
-      useRandom = Math.random() <= msg.data.randomChance;
-    }
-    for (var channel = 0; channel < 4; channel++) {
-      var channelValue;
-      var index = pixelIndex * 4 + channel;
-      if (channel == 3) {
-        channelValue = 255;
-      } else {
-        if (useRandom) {
-          channelValue = Math.floor(Math.random() * 256);
-        } else {
-          var previousValues = [];
-          
-          if (pixelIndex > 0) {
-            previousValues.push(result[index - 4]);
-          }
-          
-          // todo more stuff here...
-          if (previous != false){
-            if(pixelIndex > 0){
-              previousValues.push(previous[index - 4]);
-            }
-            previousValues.push(previous[index]);
-            if (pixelIndex < msg.data.pixels - 1) {
-              previousValues.push(previous[index + 4]);
-            }
-          }
-          // console.log(previousValues)
-          var mean = previousValues.reduce(function(prev, cur){
-            return prev + cur;
-          }, 0) / previousValues.length;
-          var min = Math.max(mean - msg.data.variance, 0);
-          var max = Math.min(mean + msg.data.variance, 255);
-          channelValue = getRandomInt(min, max);
-        }
-      }
-      result[index] = channelValue;
-    }
+  var generator = new LineGenerator(msg.data.columns, msg.data.randomChance, msg.data.variance);
+  for (var line = 0; line < msg.data.lines; line++) {
+    var imageData = new ImageData(generator.nextLine(), msg.data.columns, 1);
+    var response = {
+      x: 0,
+      y: line,
+      imageData: imageData
+    };
+    postMessage(response);
   }
-  previous = result;
-  postMessage({result:result});
-  onmessage(msg);
+  // should tell that the work is done
+  close();
 }
