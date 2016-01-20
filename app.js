@@ -1,4 +1,5 @@
-angular.module('services', []).factory('state', function(){
+angular.module("randomImage", [])
+.factory('state', function(){
   var state = {
     lines: 300,
     columns: 300,
@@ -7,9 +8,7 @@ angular.module('services', []).factory('state', function(){
     processing: false
   }
   return state;
-});
-
-angular.module("randomImage", ['services'])
+})
 .controller("InputController", ["$scope", "state", function($scope, state){
   $scope.state = state;
   $scope.validateInt = function(key){
@@ -44,7 +43,4 @@ angular.module("randomImage", ['services'])
       worker.postMessage($scope.state);
     }
   });
-
-  
-}])
-;
+}]);
