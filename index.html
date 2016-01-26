@@ -21,13 +21,16 @@
       <input pattern="[\d\.\+\*]*"  inputmode="numeric" type="number" ng-model="state.randomChance"
         ng-change="validateFloat('randomChance')">
       <br/>
+      <label> Method </label>
+      <select ng-model="state.method">
+        <option ng-repeat="method in state.methods" value="{{method}}">{{method}}</option>
+      </select>
       <button ng-click="start()">go</button>
 
       
     </div>
     <div ng-controller="CanvasController">
-      <canvas id="canvas" height="{{state.lines}}" width="{{state.columns}}"
-      style="background-color:black" ng-click="lol()">
+      <canvas id="canvas" height="{{state.lines}}" width="{{state.columns}}" style="background-color:black">
       </canvas>
     </div>
   </body>
