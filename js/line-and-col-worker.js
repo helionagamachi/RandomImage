@@ -49,12 +49,8 @@ function LineGenerator(initialPixel, randomChance, variance){
       result[index + 3] = 255;
       pixelIndex = pixelIndex + 1;
     } // while pixelIndex < length
+
     previous = result;
-    
-      if (length == 2) {
-        console.log('hi!');
-        console.log(result);
-      }
     return result;
   } // this.nextLine = function(length)
 
@@ -62,7 +58,6 @@ function LineGenerator(initialPixel, randomChance, variance){
 }
 
 onmessage = function(msg){
-  console.log(JSON.stringify(msg.data));
   // setup the initial pixel and send to the main thread
   var initialPixel = new Uint8ClampedArray(4);
   initialPixel[0] = getRandomInt(0, 255, 1);
